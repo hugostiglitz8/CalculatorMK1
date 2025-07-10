@@ -32,6 +32,7 @@ class CalculatorBrain: ObservableObject {
             if !currentExpression.isEmpty && !currentExpression.hasSuffix("/") && !currentExpression.hasSuffix(" ") {
                 currentExpression += "/"
                 displayValue = currentExpression
+                usedFractionEntry = true
             }
         case ">":
             if !currentExpression.isEmpty && !currentExpression.hasSuffix(" ") {
@@ -125,20 +126,20 @@ class CalculatorBrain: ObservableObject {
         let value = evaluateExpression(displayValue)
         // For now, simple mm to inches conversion
         let inches = value.toDouble / 25.4
-        displayValue = Decimal(inches).toString + " in"
-        lastAnswer = Decimal(inches).toString
+        displayValue = FixedDecimal(inches).toString + " in"
+        lastAnswer = FixedDecimal(inches).toString
         
         currentExpression = displayValue
         justCalculated = true
     }
     
-    private func evaluateExpression(_ expr: String) -> Decimal {
+    private func evaluateExpression(_ expr: String) -> FixedDecimal {
         var expression = expr
             .replacingOccurrences(of: "×", with: "*")
             .replacingOccurrences(of: "÷", with: "/")
         
         // Simple expression evaluator
-        var result = Decimal(0)
+        var result = FixedDecimal(Int64(0))
         var currentOp: Character = "+"
         var currentToken = ""
         
@@ -164,7 +165,7 @@ class CalculatorBrain: ObservableObject {
         return result
     }
     
-    private func parseMixedFraction(_ token: String) -> Decimal {
+    private func parseMixedFraction(_ token: String) -> FixedDecimal {
         let trimmed = token.trimmingCharacters(in: .whitespaces)
         
         if let spaceIndex = trimmed.firstIndex(of: " ") {
@@ -172,12 +173,12 @@ class CalculatorBrain: ObservableObject {
             let wholePart = String(trimmed[..<spaceIndex])
             let fracPart = String(trimmed[trimmed.index(after: spaceIndex)...])
             
-            let whole = Decimal(wholePart)
+            let whole = FixedDecimal(wholePart)
             if let slashIndex = fracPart.firstIndex(of: "/") {
                 let num = String(fracPart[..<slashIndex])
                 let den = String(fracPart[fracPart.index(after: slashIndex)...])
                 
-                let fraction = Decimal(num) / Decimal(den)
+                let fraction = FixedDecimal(num) / FixedDecimal(den)
                 return whole + fraction
             }
             return whole
@@ -185,10 +186,10 @@ class CalculatorBrain: ObservableObject {
             // Simple fraction
             let num = String(trimmed[..<slashIndex])
             let den = String(trimmed[trimmed.index(after: slashIndex)...])
-            return Decimal(num) / Decimal(den)
+            return FixedDecimal(num) / FixedDecimal(den)
         } else {
             // Regular number
-            return Decimal(trimmed)
+            return FixedDecimal(trimmed)
         }
     }
 }

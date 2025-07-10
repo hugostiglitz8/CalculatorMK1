@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Decimal {
+struct FixedDecimal {
     static let SCALE: Int64 = 1_000_000 // 6 decimal places
     private var value: Int64
     
@@ -43,27 +43,27 @@ struct Decimal {
         }
     }
     
-    static func fromScaled(_ scaled: Int64) -> Decimal {
-        var decimal = Decimal(0)
+    static func fromScaled(_ scaled: Int64) -> FixedDecimal {
+        var decimal = FixedDecimal(Int64(0))
         decimal.value = scaled
         return decimal
     }
     
     // Arithmetic operators
-    static func +(lhs: Decimal, rhs: Decimal) -> Decimal {
+    static func +(lhs: FixedDecimal, rhs: FixedDecimal) -> FixedDecimal {
         return .fromScaled(lhs.value + rhs.value)
     }
     
-    static func -(lhs: Decimal, rhs: Decimal) -> Decimal {
+    static func -(lhs: FixedDecimal, rhs: FixedDecimal) -> FixedDecimal {
         return .fromScaled(lhs.value - rhs.value)
     }
     
-    static func *(lhs: Decimal, rhs: Decimal) -> Decimal {
+    static func *(lhs: FixedDecimal, rhs: FixedDecimal) -> FixedDecimal {
         let result = (lhs.value * rhs.value) / SCALE
         return .fromScaled(result)
     }
     
-    static func /(lhs: Decimal, rhs: Decimal) -> Decimal {
+    static func /(lhs: FixedDecimal, rhs: FixedDecimal) -> FixedDecimal {
         guard rhs.value != 0 else { return .fromScaled(0) }
         let result = (lhs.value * SCALE) / rhs.value
         return .fromScaled(result)
