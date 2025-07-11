@@ -76,3 +76,6 @@ struct CalculatorButtonStyle: ButtonStyle {
             .opacity(configuration.isPressed ? 0.8 : 1.0)
     }
 }
+#Preview {
+    ContentView()
+}
