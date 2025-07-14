@@ -134,7 +134,7 @@ class CalculatorBrain: ObservableObject {
     }
     
     private func evaluateExpression(_ expr: String) -> FixedDecimal {
-        var expression = expr
+        let expression = expr
             .replacingOccurrences(of: "×", with: "*")
             .replacingOccurrences(of: "÷", with: "/")
         
