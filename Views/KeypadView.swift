@@ -10,16 +10,15 @@ import SwiftUI
 struct KeypadView: View {
     @ObservedObject var calculator: CalculatorBrain
     
-    let buttonTextColor: Color = .keyText
-    
+    let buttonTextColor: Color = Color("keyText")
     
     let buttonColors: [String: Color] = [
-        "AC": .keyRed,
+        "AC": Color("keyRed"),
         "Del": .orange,
-        "=": .keyGreen,
-        "÷": .keyBlue, "×": .keyBlue, "-": .keyBlue, "+": .keyBlue,
-        "MM": .keyPurple, "round": .keyPurple,
-        "x/y": .keyOrange, ">": .gray
+        "=": Color("keyGreen"),
+        "÷": Color("keyBlue"), "×": Color("keyBlue"), "-": Color("keyBlue"), "+": Color("keyBlue"),
+        "MM": Color("keyPurple"), "round": Color("keyYellow"),
+        "x/y": Color("keyOrange"), ">": .gray
     ]
     
     var body: some View {
@@ -28,15 +27,9 @@ struct KeypadView: View {
             let buttonHeight = (geometry.size.height - 5) / 6 // 6 rows with 5 spacings
             
             VStack(spacing: 1) {
-                // Top row: AC, Round, MM (3 buttons)
+                // Top row: Round, MM, x/y (3 buttons taking full width)
                 HStack(spacing: 1) {
-                    CalculatorButton(
-                        title: "AC",
-                        color: buttonColor(for: "AC"),
-                        textColor: buttonTextColor,
-                        action: { calculator.handleKey("AC") }
-                    )
-                    .frame(width: buttonWidth, height: buttonHeight)
+                    let topRowButtonWidth = (geometry.size.width - 2) / 3 // 3 columns with 2 spacings
                     
                     CalculatorButton(
                         title: "round",
@@ -44,7 +37,7 @@ struct KeypadView: View {
                         textColor: buttonTextColor,
                         action: { calculator.handleKey("round") }
                     )
-                    .frame(width: buttonWidth, height: buttonHeight)
+                    .frame(width: topRowButtonWidth, height: buttonHeight)
                     
                     CalculatorButton(
                         title: "MM",
@@ -52,19 +45,24 @@ struct KeypadView: View {
                         textColor: buttonTextColor,
                         action: { calculator.handleKey("MM") }
                     )
-                    .frame(width: buttonWidth, height: buttonHeight)
+                    .frame(width: topRowButtonWidth, height: buttonHeight)
                     
-                    // Empty space to maintain 4-column grid alignment
-                    Color.clear.frame(width: buttonWidth, height: buttonHeight)
-                }
-                
-                // Second row: x/y, ÷, ×, -
-                HStack(spacing: 1) {
                     CalculatorButton(
                         title: "x/y",
                         color: buttonColor(for: "x/y"),
                         textColor: buttonTextColor,
                         action: { calculator.handleKey("x/y") }
+                    )
+                    .frame(width: topRowButtonWidth, height: buttonHeight)
+                }
+                
+                // Second row: AC, ÷, ×, -
+                HStack(spacing: 1) {
+                    CalculatorButton(
+                        title: "AC",
+                        color: buttonColor(for: "AC"),
+                        textColor: buttonTextColor,
+                        action: { calculator.handleKey("AC") }
                     )
                     .frame(width: buttonWidth, height: buttonHeight)
                     
@@ -236,7 +234,7 @@ struct KeypadView: View {
     }
     
     func buttonColor(for button: String) -> Color {
-        buttonColors[button] ?? .keys
+        buttonColors[button] ?? Color("Keys")
     }
 }
 

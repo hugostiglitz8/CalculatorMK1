@@ -9,24 +9,27 @@ import SwiftUI
 
 struct DisplayView: View {
     @ObservedObject var calculator: CalculatorBrain
+    let isMiniMode: Bool
     
     var body: some View {
         VStack(alignment: .trailing, spacing: 5) {
-            // History line
-            Text(calculator.historyValue)
-                .font(.system(size: 14))
-                .foregroundColor(.gray)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-            
-            // Alternate display
-            Text(calculator.alternateValue)
-                .font(.system(size: 14))
-                .foregroundColor(.gray.opacity(0.7))
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            if !isMiniMode {
+                // History line (only in full mode)
+                Text(calculator.historyValue)
+                    .font(.system(size: 14))
+                    .foregroundColor(.gray)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                
+                // Alternate display (only in full mode)
+                Text(calculator.alternateValue)
+                    .font(.system(size: 14))
+                    .foregroundColor(.gray.opacity(0.7))
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
             
             // Main display
             Text(calculator.displayValue.isEmpty ? "0" : calculator.displayValue)
-                .font(.system(size: 28, weight: .light))
+                .font(.system(size: isMiniMode ? 32 : 28, weight: .light))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .lineLimit(1)

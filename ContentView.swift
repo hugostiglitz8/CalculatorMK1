@@ -8,17 +8,46 @@
 import SwiftUI
 import AppKit
 
+// Helper class to handle window button actions
+class WindowController: NSObject {
+    var toggleMiniMode: (() -> Void)?
+    
+    @objc func handleZoomButton() {
+        toggleMiniMode?()
+    }
+}
+
 struct ContentView: View {
     @StateObject private var calculator = CalculatorBrain()
+    @State private var isMiniMode = false
+    @State private var windowController = WindowController()
     
     var body: some View {
         VStack(spacing: 0) {
-            DisplayView(calculator: calculator)
-            KeypadView(calculator: calculator)
+            // Toggle button - always visible
+            HStack {
+                Button(action: toggleMiniMode) {
+                    Image(systemName: isMiniMode ? "plus.rectangle" : "minus.rectangle")
+                        .foregroundColor(.gray)
+                        .font(.system(size: 12))
+                }
+                .buttonStyle(PlainButtonStyle())
+                .padding(.leading, 8)
+                .padding(.top, 4)
+                Spacer()
+            }
+            .frame(height: 20)
+            
+            DisplayView(calculator: calculator, isMiniMode: isMiniMode)
+            
+            if !isMiniMode {
+                KeypadView(calculator: calculator)
+            }
         }
-        .frame(width: 320, height: 500)
+        .frame(width: 320, height: isMiniMode ? 140 : 520) // Adjusted heights to account for button
         .background(Color(red: 0.1, green: 0.1, blue: 0.1))
         .onAppear {
+            setupWindowControls()
             NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 handleKeyEvent(event)
                 return nil
@@ -26,7 +55,35 @@ struct ContentView: View {
         }
     }
     
+    private func setupWindowControls() {
+        windowController.toggleMiniMode = toggleMiniMode
+        
+        DispatchQueue.main.async {
+            if let window = NSApplication.shared.windows.first {
+                // Override the green button (zoom button) action
+                window.standardWindowButton(.zoomButton)?.target = windowController
+                window.standardWindowButton(.zoomButton)?.action = #selector(WindowController.handleZoomButton)
+            }
+        }
+    }
+    
+    private func toggleMiniMode() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            isMiniMode.toggle()
+        }
+        
+        // Update window size after animation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            if let window = NSApplication.shared.windows.first {
+                let newSize = NSSize(width: 320, height: isMiniMode ? 140 : 520)
+                window.setContentSize(newSize)
+            }
+        }
+    }
+    
     private func handleKeyEvent(_ event: NSEvent) {
+        // Only handle keyboard input in full mode
+        guard !isMiniMode else { return }
         guard let characters = event.characters else { return }
         
         switch characters {
