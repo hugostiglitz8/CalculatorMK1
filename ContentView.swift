@@ -8,101 +8,94 @@
 import SwiftUI
 import AppKit
 
-// Helper class to handle window button actions
-class WindowController: NSObject {
-    var toggleMiniMode: (() -> Void)?
-    
-    @objc func handleZoomButton() {
-        toggleMiniMode?()
-    }
-}
-
 struct ContentView: View {
     @StateObject private var calculator = CalculatorBrain()
-    @State private var isMiniMode = false
-    @State private var windowController = WindowController()
+    @State private var showKeypad = true
     
     var body: some View {
         VStack(spacing: 0) {
-            // Toggle button - always visible
             HStack {
-                Button(action: toggleMiniMode) {
-                    Image(systemName: isMiniMode ? "plus.rectangle" : "minus.rectangle")
-                        .foregroundColor(.gray)
-                        .font(.system(size: 12))
+                Spacer()
+                
+                // Toggle button for mini mode - moved to top right
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showKeypad.toggle()
+                    }
+                }) {
+                    Image(systemName: showKeypad ? "minus.circle.fill" : "plus.circle.fill")
+                        .foregroundColor(.white.opacity(0.7))
+                        .font(.system(size: 16))
                 }
                 .buttonStyle(PlainButtonStyle())
-                .padding(.leading, 8)
+                .padding(.trailing, 8)
                 .padding(.top, 4)
-                Spacer()
             }
-            .frame(height: 20)
             
-            DisplayView(calculator: calculator, isMiniMode: isMiniMode)
+            DisplayView(calculator: calculator, isMiniMode: !showKeypad)
             
-            if !isMiniMode {
+            if showKeypad {
                 KeypadView(calculator: calculator)
             }
         }
-        .frame(width: 320, height: isMiniMode ? 140 : 520) // Adjusted heights to account for button
+        .frame(width: 320, height: showKeypad ? 540 : 100)
         .background(Color(red: 0.1, green: 0.1, blue: 0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .focusable()
         .onAppear {
-            setupWindowControls()
-            NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                handleKeyEvent(event)
-                return nil
+            setupKeyboardHandling()
+            
+            // Ensure window accepts key events
+            DispatchQueue.main.async {
+                if let window = NSApplication.shared.windows.first {
+                    window.makeKey()
+                    window.acceptsMouseMovedEvents = true
+                    window.level = .normal
+                }
             }
         }
-    }
-    
-    private func setupWindowControls() {
-        windowController.toggleMiniMode = toggleMiniMode
-        
-        DispatchQueue.main.async {
+        .onTapGesture {
+            // Ensure focus when clicked
             if let window = NSApplication.shared.windows.first {
-                // Override the green button (zoom button) action
-                window.standardWindowButton(.zoomButton)?.target = windowController
-                window.standardWindowButton(.zoomButton)?.action = #selector(WindowController.handleZoomButton)
+                window.makeKey()
             }
         }
     }
     
-    private func toggleMiniMode() {
-        withAnimation(.easeInOut(duration: 0.3)) {
-            isMiniMode.toggle()
-        }
-        
-        // Update window size after animation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            if let window = NSApplication.shared.windows.first {
-                let newSize = NSSize(width: 320, height: isMiniMode ? 140 : 520)
-                window.setContentSize(newSize)
+    private func setupKeyboardHandling() {
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if handleKeyEvent(event) {
+                return nil // Consume the event
             }
+            return event // Let system handle it
         }
     }
     
-    private func handleKeyEvent(_ event: NSEvent) {
-        // Only handle keyboard input in full mode
-        guard !isMiniMode else { return }
-        guard let characters = event.characters else { return }
+    private func handleKeyEvent(_ event: NSEvent) -> Bool {
+        guard let characters = event.characters else { return false }
         
         switch characters {
         case "0"..."9", ".":
             calculator.handleKey(characters)
+            return true
         case "+", "-", "*", "/":
-            // Convert keyboard operators to display operators
             let displayOp = characters == "*" ? "×" : characters == "/" ? "÷" : characters
             calculator.handleKey(displayOp)
+            return true
         case "\r", "\n": // Enter/Return key
             calculator.handleKey("=")
-        case "\u{7F}": // Delete key
+            return true
+        case "\u{7F}", "\u{8}": // Delete/Backspace key
             calculator.handleKey("Del")
+            return true
         case "\u{1B}": // Escape key
             calculator.handleKey("AC")
+            return true
         case " ":
             calculator.handleKey(">")
+            return true
         default:
-            break
+            return false
         }
     }
 }

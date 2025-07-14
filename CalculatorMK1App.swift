@@ -13,7 +13,5 @@ struct CalculatorMK1App: App {
         WindowGroup {
             ContentView()
         }
-        .windowStyle(.hiddenTitleBar)
-        .windowResizability(.contentSize)
     }
 }
